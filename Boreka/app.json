@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Boreka",
-    "slug": "Boreka",
+    "slug": "boreka",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -24,10 +24,17 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
-      }
+      },
+      "package": "com.anonymous.Boreka"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "1f03279f-0cab-4fc1-ba46-da3143d45346"
+      }
+    },
+    "owner": "kimathi99"
   }
 }

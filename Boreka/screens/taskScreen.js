@@ -1,21 +1,51 @@
-import React from 'react';
-import {
-  StyleSheet,
-  SafeAreaView,
-  View,
-  TextInput,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  Alert,
-} from 'react-native';
+import React ,{useState,useEffect}from 'react';
+import {  StyleSheet,Button,  SafeAreaView,  View,  TextInput,  Text,  FlatList,  TouchableOpacity,  Alert,} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+//library responsible for locations
+import * as Location from 'expo-location';
 const COLORS = {primary: '#1f145c', white: '#fff'};
+
+
+
+
+
 
 export default function TaskScreen  () {
   const [todos, setTodos] = React.useState([]);
   const [textInput, setTextInput] = React.useState('');
+  const [location, setLocation] = useState();
+  
+
+  Location.setGoogleApiKey("AIzaSyD5GUOMMrDY5Ml8JOQ5j7z7p9f8GaGCDBg");
+//ask for permisiions before the app renders
+  useEffect(() => {
+    const getPermissions = async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        console.log("Please grant location permissions");
+        return;
+      }
+
+      let currentLocation = await Location.getCurrentPositionAsync({});
+      setLocation(currentLocation);
+      console.log("Location:");
+      console.log(currentLocation);
+    };
+    //call the function to trigger the android permission
+    getPermissions();
+  }, []);
+
+  // used the react native async storage to store  
+  const saveTodoToUserDevice = async todos => {
+    try {
+      const stringifyTodos = JSON.stringify(todos);
+      await AsyncStorage.setItem('todos', stringifyTodos);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  //when rendering the  screen get the information stored in our device pass an empty array to avoid rerendering
 
   React.useEffect(() => {
     getTodosFromUserDevice();
@@ -25,28 +55,24 @@ export default function TaskScreen  () {
     saveTodoToUserDevice(todos);
   }, [todos]);
 
+  
+//when you  click the add icon 
   const addTodo = () => {
     if (textInput == '') {
-      Alert.alert('Error', 'Please input todo');
+      Alert.alert('Error', 'Not a  valid task');
     } else {
       const newTodo = {
         id: Math.random(),
         task: textInput,
+        longitude:location.coords.longitude,
+        latitude :location.coords.latitude, 
         completed: false,
       };
       setTodos([...todos, newTodo]);
       setTextInput('');
     }
   };
-
-  const saveTodoToUserDevice = async todos => {
-    try {
-      const stringifyTodos = JSON.stringify(todos);
-      await AsyncStorage.setItem('todos', stringifyTodos);
-    } catch (error) {
-      console.log(error);
-    }
-  };
+ //called by the useeffect 
 
   const getTodosFromUserDevice = async () => {
     try {
@@ -58,7 +84,7 @@ export default function TaskScreen  () {
       console.log(error);
     }
   };
-
+//function used to mark if the  task is completed
   const markTodoComplete = todoId => {
     const newTodosItem = todos.map(item => {
       if (item.id == todoId) {
@@ -74,7 +100,7 @@ export default function TaskScreen  () {
     const newTodosItem = todos.filter(item => item.id != todoId);
     setTodos(newTodosItem);
   };
-
+//delete and set the todos to an empty array
   const clearAllTodos = () => {
     Alert.alert('Confirm', 'Clear todos?', [
       {
@@ -86,7 +112,7 @@ export default function TaskScreen  () {
       },
     ]);
   };
-
+//will be used to render our flatlist 
   const ListItem = ({todo}) => {
     return (
       <View style={styles.listItem}>
@@ -97,8 +123,8 @@ export default function TaskScreen  () {
               fontSize: 15,
               color: COLORS.primary,
               textDecorationLine: todo?.completed ? 'line-through' : 'none',
-            }}>
-            {todo?.task}
+            }}>task name:
+            {todo?.task} long:{todo?.longitude} lat :{todo?.latitude} 
           </Text>
         </View>
         {!todo?.completed && (
@@ -116,6 +142,8 @@ export default function TaskScreen  () {
       </View>
     );
   };
+
+  //this is what is rendered by the function component
   return (
     <SafeAreaView
       style={{
@@ -158,6 +186,8 @@ export default function TaskScreen  () {
   );
 };
 
+
+// styling our screen
 const styles = StyleSheet.create({
   footer: {
     position: 'absolute',
